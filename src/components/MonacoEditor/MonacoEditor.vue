@@ -15,7 +15,7 @@ import {
 } from 'vue';
 
 import * as monaco from 'monaco-editor';
-import type CustomProviders from 'src/types/CustomProviders';
+import type { CustomProviders, CustomProvidersOptions } from 'src/types/CustomProviders';
 
 // --- Type Definitions ---
 type EditorInstance = monaco.editor.IStandaloneCodeEditor;
@@ -30,20 +30,24 @@ const props = defineProps({
   },
   language: {
     type: String,
-    // Defaulting language might be less useful if using specific IDs like 'python-custom'
     default: 'javascript',
   },
   customProviders: {
-    // Use PropType for better type checking from parent
     type: Object as PropType<CustomProviders>,
-    required: false, // Keep optional
+    required: false,
     default: undefined,
   },
+  customProvidersOptions: {
+    type: Object as PropType<CustomProvidersOptions>,
+    required: false,
+    default: undefined,
+  },
+
   theme: {
     type: String,
     default: 'vs-dark',
   },
-  options: {
+  editorOptions: {
     type: Object as () => EditorOptions,
     default: () => ({}),
   },
@@ -122,13 +126,14 @@ watch(
   },
 );
 watch(
-  () => props.options,
+  () => props.editorOptions,
   (newOptions) => {
     if (editorInstance.value) editorInstance.value.updateOptions(newOptions);
   },
   { deep: true },
 );
 
+// Watch customProviders prop changes to re-register providers if focused, should be not important for most cases.
 watch(
   () => props.customProviders,
   (newProviders, oldProviders) => {
@@ -164,7 +169,7 @@ const initializeEditor = async () => {
     automaticLayout: true,
     wordWrap: 'on',
     minimap: { enabled: false },
-    ...props.options,
+    ...props.editorOptions,
   };
 
   try {
@@ -181,24 +186,26 @@ const initializeEditor = async () => {
     });
 
     // --- Setup Focus/Blur Listeners ---
-    const editor = editorInstance.value; // Capture instance for listeners
+    const editor = editorInstance.value;
 
-    const focusReg = editor.onDidFocusEditorWidget(() => {
-      console.log('Editor focused:', editor.getId(), `- Language: ${props.language}`);
-      // Register providers ONLY if this instance has them defined
-      if (props.customProviders) {
-        registerOrUpdateCustomProviders(props.language);
-      } else {
-        console.log('Focused editor has no custom providers.');
-      }
-    });
+    if (props.customProvidersOptions && props.customProvidersOptions?.disposeOnFocusLost) {
+      const focusReg = editor.onDidFocusEditorWidget(() => {
+        console.log('Editor focused:', editor.getId(), `- Language: ${props.language}`);
+        // Register providers ONLY if this instance has them defined
+        if (props.customProviders) {
+          registerOrUpdateCustomProviders(props.language);
+        } else {
+          console.log('Focused editor has no custom providers.');
+        }
+      });
 
-    const blurReg = editor.onDidBlurEditorWidget(() => {
-      console.log('Editor blurred:', editor.getId(), `- Language: ${props.language}`);
-      disposeCustomRegistrations();
-    });
+      const blurReg = editor.onDidBlurEditorWidget(() => {
+        console.log('Editor blurred:', editor.getId(), `- Language: ${props.language}`);
+        disposeCustomRegistrations();
+      });
 
-    focusListeners.value = [focusReg, blurReg]; // Store listener disposables
+      focusListeners.value = [focusReg, blurReg]; // Store listener disposables
+    }
 
     // --- Initial Check: If editor is focused immediately ---
     if (editor.hasWidgetFocus() && props.customProviders) {

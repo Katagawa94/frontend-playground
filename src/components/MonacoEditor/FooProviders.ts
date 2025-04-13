@@ -1,4 +1,4 @@
-import type CustomProviders from 'src/types/CustomProviders';
+import type { CustomProviders, CustomProvidersOptions } from 'src/types/CustomProviders';
 import * as monaco from 'monaco-editor';
 
 type ITextModel = monaco.editor.ITextModel;
@@ -8,7 +8,7 @@ type CompletionList = monaco.languages.CompletionList;
 type CompletionItem = monaco.languages.CompletionItem;
 type IRange = monaco.IRange;
 
-const fooProviders: CustomProviders = {
+export const fooProviders: CustomProviders = {
   hoverProvider: {
     provideHover: (model, position) => {
       const word = model.getWordAtPosition(position);
@@ -29,7 +29,6 @@ const fooProviders: CustomProviders = {
       model: ITextModel,
       position: Position,
     ): ProviderResult<CompletionList> => {
-
       const wordInfo = model.getWordUntilPosition(position);
       const defaultRange: IRange = {
         startLineNumber: position.lineNumber,
@@ -64,4 +63,6 @@ const fooProviders: CustomProviders = {
   },
 };
 
-export default fooProviders;
+export const fooProvidersOptions: CustomProvidersOptions = {
+  disposeOnFocusLost: true,
+};

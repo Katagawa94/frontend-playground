@@ -42,6 +42,7 @@
               language="python"
               theme="vs-dark"
               :custom-providers="fooProviders"
+              :custom-providers-options="fooProvidersOptions"
               :options="editorOptions"
               class="editor-instance"
               @editor-did-mount="handleEditorReady"
@@ -64,7 +65,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import MonacoEditor from 'src/components/MonacoEditor/MonacoEditor.vue';
-import fooProviders from './MonacoEditor/FooProviders';
+import { fooProviders, fooProvidersOptions } from './MonacoEditor/FooProviders';
 
 import type * as monaco from 'monaco-editor';
 
