@@ -207,8 +207,7 @@ const initializeEditor = async () => {
       focusListeners.value = [focusReg, blurReg]; // Store listener disposables
     }
 
-    // --- Initial Check: If editor is focused immediately ---
-    if (editor.hasWidgetFocus() && props.customProviders) {
+    if (props.customProviders) {
       console.log('Editor initialized with focus, registering providers.');
       registerOrUpdateCustomProviders(props.language);
     }
